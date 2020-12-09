@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+        "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<!--        namespace定位指定的接口-->
+<mapper namespace="com.cykj.mapper.UserMapper">
+
+    <sql id="defaultUser">
+        select u.*,p.parameterName userStateName from t_user u inner join t_parameter p on u.userState=p.parameterId
+    </sql>
+
+    <!--    增加用户-->
+    <insert id="addUser" parameterType="User" keyProperty="userId" useGeneratedKeys="true">
+        insert into t_user(userAccount, userPassword, userName, email, mobile, sex, idNumber, registerTime, score, userState, uploadingNumber, downloadNumber)
+        VALUES (#{userAccount},#{userPassword},#{userName},#{email},#{mobile},#{sex},#{idNumber},sysdate(),(select parameterName from t_parameter where parameterId=8),1,0,0)
+    </insert>
+    <!--    删除用户-->
+    <delete id="deleteUserById" parameterType="User">
+        delete from t_user where userId=#{userId}
+    </delete>
+    <!--    修改用户-->
+    <update id="updateUser" parameterType="User">
+        update t_user set userAccount=#{userAccount},userPassword=#{userPassword},userName=#{userName},userState=#{userState} where userId=#{userId}
+    </update>
+    <!--    条件查询所有用户-->
+    <select id="findAll" parameterType="java.util.HashMap" resultType="User">
+        <include refid="defaultUser"></include>
+        <where>
+            <if test="stateTime!=null and stateTime!=''">
+                and registerTime>=DATE_FORMAT(#{stateTime},'%Y-%m-%d %H:%i::%s')
+            </if>
+            <if test="entTime!=null and entTime!='' ">
+                and registerTime &lt;= DATE_FORMAT(#{entTime},'%Y-%m-%d %H:%i::%s')
+            </if>
+            <if test="userName!=null and userName!='' ">
+                and userName like CONCAT('%',#{userName},'%')
+            </if>
+        </where>
+        order by userId limit #{startPage},#{endPage}
+    </select>
+
+    <!--    条件查询所有用户总数-->
+    <select id="UserTotal" parameterType="java.util.HashMap" resultType="java.lang.Integer">
+        select count(userId) from t_user
+        <where>
+            <if test="stateTime!=null and stateTime!=''">
+                and registerTime>=DATE_FORMAT(#{stateTime},'%Y-%m-%d %H:%i::%s')
+            </if>
+            <if test="entTime!=null and entTime!='' ">
+                and registerTime &lt;= DATE_FORMAT(#{entTime},'%Y-%m-%d %H:%i::%s')
+            </if>
+            <if test="userName!=null and userName!='' ">
+                and userName like CONCAT('%',#{userName},'%')
+            </if>
+        </where>
+    </select>
+
+    <!--    登录操作-->
+    <select id="login" resultType="User">
+        select u.*,p.parameterName userStateName from t_user u inner join t_parameter p on u.userState=p.parameterId where userAccount=#{0} and userPassword=#{1} and userState=1
+    </select>
+
+    <!--    一个用户拥有多个文档-->
+    <select id="allUser" resultType="User" resultMap="users">
+        select * from t_user
+    </select>
+
+    <resultMap id="users" type="User">
+        <id column="userId" property="userId"></id>
+        <result column="userAccount" property="userAccount"></result>
+        <result column="userName" property="userName"></result>
+        <!--       collection:集合， column:传入查询条件,property:类中的集合,ofType:集合的泛型：Document，select执行查询方法的id-->
+        <collection column="userId" property="documentList" ofType="Document" select="docAll">
+            <id column="documentId" property="documentId"></id>
+            <result column="documentName" property="documentName"></result>
+            <result column="documentType" property="documentType"></result>
+            <result column="userId" property="userId"></result>
+            <result column="documentState" property="documentState"></result>
+            <result column="startTime" property="startTime"></result>
+        </collection>
+    </resultMap>
+
+    <select id="docAll" parameterType="java.lang.Integer" resultType="Document">
+    select * from t_document where userId=#{userId}
+    </select>
+
+
+    <select id="documentAll" resultType="Document" resultMap="Docs">
+        select * from t_document
+    </select>
+
+    <resultMap id="Docs" type="Document">
+        <id column="documentId" property="documentId"></id>
+        <id column="documentName" property="documentName"></id>
+        <id column="userId" property="userId"></id>
+        <association property="user" column="userId" javaType="User" select="userById">
+            <id column="userId" property="userId"></id>
+            <result column="userAccount" property="userAccount"></result>
+            <result column="userName" property="userName"></result>
+        </association>
+    </resultMap>
+
+    <select id="userById" parameterType="java.lang.Integer" resultType="User">
+    select * from t_user where userId=#{userId}
+    </select>
+
+
+    <select id="userByDocument" resultType="User" resultMap="UserMaps">
+        select * from t_user u left join t_document td on u.userId = td.userId
+    </select>
+
+    <resultMap id="UserMaps" type="User">
+        <id column="userId" property="userId"></id>
+        <result column="userAccount" property="userAccount"></result>
+        <result column="userName" property="userName"></result>
+        <collection property="documentList" ofType="Document">
+            <id column="documentId" property="documentId"></id>
+            <id column="documentName" property="documentName"></id>
+            <id column="userId" property="userId"></id>
+        </collection>
+    </resultMap>
+
+    <select id="DocumentByuser" resultType="User" resultMap="UserMaps">
+        select * from t_user u left join t_document td on u.userId = td.userId
+    </select>
+    
+    
+</mapper>

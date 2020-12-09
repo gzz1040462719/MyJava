@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+        "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<!--        namespace定位指定的接口-->
+<mapper namespace="com.cykj.mapper.DocumentMapper">
+<!--    返回自定义map-->
+    <resultMap id="DocumentMap" type="Document">
+        <id property="documentId" column="documentId"></id>
+        <result property="documentName" column="documentName"></result>
+        <result property="documentType" column="documentType"></result>
+        <result property="userId" column="userId"></result>
+        <result property="documentState" column="documentState"></result>
+        <result property="documentUrl" column="documentUrl"></result>
+        <result property="startTime" column="startTime"></result>
+        <association property="user" javaType="User">
+            <result property="userName" column="userName"></result>
+        </association>
+        <association property="parameter" javaType="com.cykj.bean.Parameter">
+            <result property="parameterValue" column="parameterValue"></result>
+            <result property="parameterName" column="parameterName"></result>
+            <result property="parameterType" column="parameterType"></result>
+        </association>
+        <association property="documentTypes" javaType="com.cykj.bean.DocumentTypes">
+            <result property="documentTypesName" column="documentTypesName"></result>
+            <result property="documentTypesScore" column="documentTypesScore"></result>
+        </association>
+    </resultMap>
+    
+<!--    条件查询所有文档-->
+    <select id="conditionFindAll" parameterType="java.util.HashMap"  resultMap="DocumentMap">
+        select d.*,tu.userName,ds.documentTypesName,ds.documentTypesScore,p.* from t_document d inner join t_user tu on d.userId = tu.userId inner join t_documenttypes ds on d.documentType=ds.documentTypesId
+        inner join t_parameter p on d.documentState=p.parameterId
+        <where>
+            <if test="stateTime!=null and stateTime!=''">
+                and startTime>=DATE_FORMAT(#{stateTime},'%Y-%m-%d %H:%i::%s')
+            </if>
+            <if test="entTime!=null and entTime!='' ">
+                and startTime &lt;= DATE_FORMAT(#{entTime},'%Y-%m-%d %H:%i::%s')
+            </if>
+            <if test="userName!=null and userName!='' ">
+                and userName like CONCAT('%',#{userName},'%')
+            </if>
+            <if test="documentName!=null and documentName!='' ">
+                and documentName like CONCAT('%',#{documentName},'%')
+            </if>
+            <if test="documentType!=null and documentType!='' ">
+                and documentType=#{documentType}
+            </if>
+        </where>
+             order by documentId limit  #{startPage},#{endPage}
+    </select>
+
+    <!--    条件查询所有文档总数-->
+    <select id="total" parameterType="java.util.HashMap" resultType="java.lang.Integer">
+        select count(documentId) from t_document d inner join t_user tu on d.userId = tu.userId
+        <where>
+            <if test="stateTime!=null and stateTime!=''">
+                and startTime>=DATE_FORMAT(#{stateTime},'%Y-%m-%d %H:%i::%s')
+            </if>
+            <if test="entTime!=null and entTime!='' ">
+                and startTime &lt;= DATE_FORMAT(#{entTime},'%Y-%m-%d %H:%i::%s')
+            </if>
+            <if test="userName!=null and userName!='' ">
+                and userName like CONCAT('%',#{userName},'%')
+            </if>
+            <if test="documentName!=null and documentName!='' ">
+                and documentName like CONCAT('%',#{documentName},'%')
+            </if>
+            <if test="documentType!=null and documentType!='' ">
+                 and documentType=#{documentType}
+            </if>
+            <if test="documentState!=null and documentState!='' ">
+                and documentState=#{documentState}
+            </if>
+        </where>
+    </select>
+
+<!--    修改文档-->
+    <update id="updateDocument" parameterType="Document">
+        update t_document
+        <set>
+            <if test="null!=documentState and ''!=documentState">
+                documentState=#{documentState}
+            </if>
+        </set>
+        where documentId=#{documentId}
+    </update>
+
+<!--    所有文档类型 -->
+    <select id="documentTypesFindAll" resultType="DocumentTypes">
+        select * from t_documenttypes
+    </select>
+
+<!--    修改文档积分或类型-->
+    <update id="updateDocumentTypes" parameterType="java.util.List">
+        <if test="list!=null">
+            <foreach collection="list" item="item" open="" close="" separator=";">
+                update t_documenttypes
+                    <if test="item.documentTypesScore!=null and item.documentTypesScore!=''">
+                    <set>
+                        documentTypesScore=#{item.documentTypesScore}
+                    </set>
+                    </if>
+                <if test="item.documentTypesState!=null and item.documentTypesState!=''">
+                    <set>
+                        documentTypesState=#{item.documentTypesState}
+                    </set>
+                </if>
+                where documentTypesId=#{item.documentTypesId}
+            </foreach>
+        </if>
+    </update>
+
+</mapper>

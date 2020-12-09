@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+        "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<!--        namespace定位指定的接口-->
+<mapper namespace="com.cykj.mapper.MenuMapper">
+    <select id="menuByPid" parameterType="java.lang.Integer" resultType="Menu">
+        select * from t_menu where menuPid=#{pid}
+    </select>
+
+    <select id="JurisdictionByRole" parameterType="java.math.BigDecimal" resultType="Jurisdiction">
+        select * from t_jurisdiction where role=#{role}
+    </select>
+
+
+</mapper>

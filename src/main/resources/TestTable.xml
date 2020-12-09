@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<root>
+    <table name="com.cykj.bean.User">
+      <propety name="userId" column="userId" order="1" />
+      <propety name="userAccount" column="userAccount" order="2" />
+      <propety name="userName" column="userName" order="3" />
+      <propety name="email" column="email" order="4" />
+      <propety name="mobile" column="mobile" order="5" />
+      <propety name="sex" column="sex" order="6" />
+      <propety name="idNumber" column="idNumber" order="7" />
+      <propety name="registerTime" column="registerTime" order="8" />
+      <propety name="score" column="score" order="9" />
+      <propety name="userState" column="userState" order="10" />
+    </table>
+</root>
